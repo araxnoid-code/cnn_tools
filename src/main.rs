@@ -28,35 +28,3 @@ fn main() {
     // println!("input grad");
     // println!("{}", input_grad);
 }
-
-fn kernel_initial(
-    in_channel: usize,
-    out_channel: usize,
-    kernel_size: usize,
-) -> (
-    Vec<Vec<ArrayBase<OwnedRepr<f32>, Dim<[usize; 2]>, f32>>>,
-    Vec<Vec<ArrayBase<OwnedRepr<f32>, Dim<[usize; 2]>, f32>>>,
-) {
-    let mut kernels = vec![];
-    let mut grads = vec![];
-    for _ in 0..out_channel {
-        let mut out_kernel = vec![];
-        let mut out_grad = vec![];
-        for _ in 0..in_channel {
-            let kernel = Array2::<f32>::from_shape_vec(
-                [kernel_size, kernel_size],
-                (0..kernel_size * kernel_size)
-                    .map(|idx| idx as f32 * 0.001)
-                    .collect::<Vec<f32>>(),
-            )
-            .unwrap();
-            out_kernel.push(kernel);
-
-            let grad = Array2::<f32>::zeros([kernel_size, kernel_size]);
-            out_grad.push(grad);
-        }
-        kernels.push(out_kernel);
-        grads.push(out_grad);
-    }
-    (kernels, grads)
-}
