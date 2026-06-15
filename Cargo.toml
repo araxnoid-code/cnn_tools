@@ -3,6 +3,9 @@ name = "neo_cnn"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+path = "src/lib.rs"
+
 [dependencies]
 ndarray = "0.17.2"
 rayon = "1.12.0"

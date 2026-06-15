@@ -1,91 +1,62 @@
-use std::iter::Sum;
+use std::{iter::Sum, ops::Index};
 
 use ndarray::{Array2, ArrayBase, ArrayD, Axis, Dim, IxDynImpl, OwnedRepr, Slice, s};
+use neo_cnn::Conv2DNonBatch;
 
 fn main() {
     let input = ArrayD::<f32>::from_shape_vec(
-        &[3, 8, 8][..],
-        (0..3 * 8 * 8)
-            .map(|idx| idx as f32 * 0.1)
-            .collect::<Vec<f32>>(),
+        &[3, 4, 4][..],
+        (0..3 * 4 * 4).map(|idx| idx as f32).collect::<Vec<f32>>(),
     )
     .unwrap();
+    let mut input_grad = ArrayD::<f32>::zeros(input.shape());
 
-    println!("{}", input);
+    println!("input");
+    println!("{}\n", input);
 
-    let in_channel = 3;
-    let out_channel = 4;
-    let kernel_size = 3;
-    let kernels = kernel_initial(in_channel, out_channel, kernel_size);
+    let mut conv2d = Conv2DNonBatch::init(3, 3, 2);
 
-    let channel_size = input.shape()[0];
-    let matrix_size = input.shape()[1];
+    let out = conv2d.forward(input.view());
+    let out_grad = ArrayD::<f32>::ones(out.shape());
 
-    let mut out = vec![];
-    for out_kernel in &kernels {
-        //
-        for row in 0..matrix_size - kernel_size + 1 {
-            for coll in 0..matrix_size - kernel_size + 1 {
-                //
-                let mut acc: Option<ArrayBase<OwnedRepr<f32>, Dim<[usize; 2]>, f32>> = None;
-                for channel_idx in 0..channel_size {
-                    // [1, 8, 8]
-                    let matrix = input.slice_axis(
-                        Axis(0),
-                        Slice::new(channel_idx as isize, Some(channel_idx as isize + 1), 1),
-                    );
+    println!("out");
+    println!("{}\n", out);
+    println!("out grad");
+    println!("{}\n", out_grad);
 
-                    let kernel = &out_kernel[channel_idx];
-
-                    let matrix = matrix.to_shape(&[8, 8][..]).unwrap();
-                    let slice = matrix.slice(s![row..row + kernel_size, coll..coll + kernel_size]);
-
-                    let result = slice.dot(kernel);
-                    if let Some(acc) = &mut acc {
-                        *acc = &*acc + result;
-                    } else {
-                        acc = Some(result)
-                    }
-                }
-                let sum = acc.unwrap().sum();
-                out.push(sum);
-            }
-        }
-    }
-    let output = ArrayD::<f32>::from_shape_vec(
-        &[
-            out_channel,
-            matrix_size - kernel_size + 1,
-            matrix_size - kernel_size + 1,
-        ][..],
-        out,
-    )
-    .unwrap();
-
-    println!("{}", output);
-
-    // prediction output shape is [4, 6, 6]
+    conv2d.backpropagation(input.view(), &mut input_grad, out_grad.view());
+    println!("input grad");
+    println!("{}", input_grad);
 }
 
 fn kernel_initial(
     in_channel: usize,
     out_channel: usize,
-    kernel: usize,
-) -> Vec<Vec<ArrayBase<OwnedRepr<f32>, Dim<[usize; 2]>, f32>>> {
+    kernel_size: usize,
+) -> (
+    Vec<Vec<ArrayBase<OwnedRepr<f32>, Dim<[usize; 2]>, f32>>>,
+    Vec<Vec<ArrayBase<OwnedRepr<f32>, Dim<[usize; 2]>, f32>>>,
+) {
     let mut kernels = vec![];
+    let mut grads = vec![];
     for _ in 0..out_channel {
         let mut out_kernel = vec![];
+        let mut out_grad = vec![];
         for _ in 0..in_channel {
             let kernel = Array2::<f32>::from_shape_vec(
-                [kernel, kernel],
-                (0..kernel * kernel)
+                [kernel_size, kernel_size],
+                (0..kernel_size * kernel_size)
                     .map(|idx| idx as f32 * 0.001)
                     .collect::<Vec<f32>>(),
             )
             .unwrap();
             out_kernel.push(kernel);
+
+            let grad = Array2::<f32>::zeros([kernel_size, kernel_size]);
+            out_grad.push(grad);
         }
         kernels.push(out_kernel);
+        grads.push(out_grad);
     }
-    kernels
+    (kernels, grads)
 }
