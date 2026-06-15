@@ -19,14 +19,14 @@ fn main() {
     let out = conv2d.forward(input.view());
     let out_grad = ArrayD::<f32>::ones(out.shape());
 
-    println!("out");
-    println!("{}\n", out);
-    println!("out grad");
-    println!("{}\n", out_grad);
+    // println!("out");
+    // println!("{}\n", out);
+    // println!("out grad");
+    // println!("{}\n", out_grad);
 
     conv2d.backpropagation(input.view(), &mut input_grad, out_grad.view());
-    println!("input grad");
-    println!("{}", input_grad);
+    // println!("input grad");
+    // println!("{}", input_grad);
 }
 
 fn kernel_initial(

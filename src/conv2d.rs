@@ -14,6 +14,7 @@ impl Conv2DNonBatch {
     pub fn init(in_channel: usize, out_channel: usize, kernel_size: usize) -> Conv2DNonBatch {
         let mut kernels = vec![];
         let mut grads = vec![];
+        let mut count = 0.;
         for _ in 0..out_channel {
             let mut out_kernel = vec![];
             let mut out_grad = vec![];
@@ -21,7 +22,10 @@ impl Conv2DNonBatch {
                 let kernel = Array2::<f32>::from_shape_vec(
                     [kernel_size, kernel_size],
                     (0..kernel_size * kernel_size)
-                        .map(|idx| idx as f32 * 0.1)
+                        .map(|_| {
+                            count += 1.;
+                            count as f32 * 0.1
+                        })
                         .collect::<Vec<f32>>(),
                 )
                 .unwrap();
@@ -101,22 +105,17 @@ impl Conv2DNonBatch {
             for row in 0..matrix_size - self.kernel_size + 1 {
                 for coll in 0..matrix_size - self.kernel_size + 1 {
                     //
-                    let mut acc: Option<ArrayBase<OwnedRepr<f32>, Dim<[usize; 2]>, f32>> = None;
+                    let mut acc: Option<ArrayBase<OwnedRepr<f32>, Dim<[usize; 3]>, f32>> = None;
                     for channel_idx in 0..channel_size {
-                        let matrix = input.slice_axis(
-                            Axis(0),
-                            Slice::new(channel_idx as isize, Some(channel_idx as isize + 1), 1),
-                        );
+                        let kernel = &out_kernel[channel_idx].view();
 
-                        let kernel = &out_kernel[channel_idx];
-
-                        let matrix = matrix.index_axis(Axis(0), 0);
-                        let slice = matrix.slice(s![
+                        let slice = input.slice(s![
+                            channel_idx..channel_idx + 1,
                             row..row + self.kernel_size,
                             coll..coll + self.kernel_size
                         ]);
 
-                        let result = slice.dot(kernel);
+                        let result = &slice * kernel;
                         if let Some(acc) = &mut acc {
                             acc.add_assign(&result);
                         } else {
