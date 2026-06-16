@@ -2,17 +2,20 @@ use std::{iter::Sum, ops::Index};
 
 use ndarray::{Array2, ArrayBase, ArrayD, Axis, Dim, IxDynImpl, OwnedRepr, Slice, s};
 use neo_cnn::{Conv2DNonBatch, MaxPooling2DNonBatch};
+use rand::random;
 
 fn main() {
     let input = ArrayD::<f32>::from_shape_vec(
         &[3, 4, 4][..],
-        (0..3 * 4 * 4).map(|idx| idx as f32).collect::<Vec<f32>>(),
+        (0..3 * 4 * 4).map(|idx| random()).collect::<Vec<f32>>(),
     )
     .unwrap();
+    println!("{}", input);
     let mut input_grad = ArrayD::<f32>::zeros(input.shape());
 
-    let max_pooling = MaxPooling2DNonBatch::new(1, 2);
-    max_pooling.forward(input.view()).unwrap();
+    let max_pooling = MaxPooling2DNonBatch::new(2, 2);
+    let out = max_pooling.forward(input.view()).unwrap();
+    println!("\n{}", out);
 
     // let mut conv2d = Conv2DNonBatch::new(3, 3, 2);
 

@@ -8,4 +8,5 @@ path = "src/lib.rs"
 
 [dependencies]
 ndarray = "0.17.2"
+rand = "0.10.1"
 rayon = "1.12.0"
