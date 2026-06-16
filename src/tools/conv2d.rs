@@ -1,7 +1,8 @@
 use std::ops::{AddAssign, Index, IndexMut};
 
 use ndarray::{
-    Array1, Array2, Array4, ArrayBase, ArrayD, ArrayViewD, Axis, Dim, OwnedRepr, Slice, s,
+    Array1, Array2, Array4, ArrayBase, ArrayD, ArrayViewD, ArrayViewMutD, Axis, Dim, OwnedRepr,
+    Slice, s,
 };
 
 pub struct Conv2DNonBatch {
@@ -36,7 +37,7 @@ impl Conv2DNonBatch {
     pub fn backpropagation(
         &mut self,
         input: ArrayViewD<f32>,
-        input_grad: &mut ArrayD<f32>,
+        mut input_grad: ArrayViewMutD<f32>,
         gradient: ArrayViewD<f32>,
     ) {
         let channel_size = self.in_channel;

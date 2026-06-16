@@ -6,16 +6,25 @@ use rand::random;
 
 fn main() {
     let input = ArrayD::<f32>::from_shape_vec(
-        &[3, 4, 4][..],
-        (0..3 * 4 * 4).map(|idx| random()).collect::<Vec<f32>>(),
+        &[2, 4, 4][..],
+        (0..2 * 4 * 4).map(|idx| random()).collect::<Vec<f32>>(),
     )
     .unwrap();
-    println!("{}", input);
     let mut input_grad = ArrayD::<f32>::zeros(input.shape());
 
-    let max_pooling = MaxPooling2DNonBatch::new(2, 2);
+    println!("{}", input);
+    println!("{}", input_grad);
+
+    let max_pooling = MaxPooling2DNonBatch::new(1, 2);
     let out = max_pooling.forward(input.view()).unwrap();
+    let out_grad = ArrayD::<f32>::ones(out.shape());
     println!("\n{}", out);
+
+    max_pooling
+        .backpropagation(input.view(), input_grad.view_mut(), out_grad.view())
+        .unwrap();
+
+    println!("{}", input_grad);
 
     // let mut conv2d = Conv2DNonBatch::new(3, 3, 2);
 
