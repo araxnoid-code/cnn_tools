@@ -15,7 +15,7 @@ pub struct Conv2DNonBatch {
 }
 
 impl Conv2DNonBatch {
-    pub fn init(in_channel: usize, out_channel: usize, kernel_size: usize) -> Conv2DNonBatch {
+    pub fn new(in_channel: usize, out_channel: usize, kernel_size: usize) -> Conv2DNonBatch {
         let len = out_channel * in_channel * kernel_size * kernel_size;
 
         Self {

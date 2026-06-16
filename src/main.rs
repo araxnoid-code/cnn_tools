@@ -1,7 +1,7 @@
 use std::{iter::Sum, ops::Index};
 
 use ndarray::{Array2, ArrayBase, ArrayD, Axis, Dim, IxDynImpl, OwnedRepr, Slice, s};
-use neo_cnn::Conv2DNonBatch;
+use neo_cnn::{Conv2DNonBatch, MaxPooling2DNonBatch};
 
 fn main() {
     let input = ArrayD::<f32>::from_shape_vec(
@@ -11,20 +11,20 @@ fn main() {
     .unwrap();
     let mut input_grad = ArrayD::<f32>::zeros(input.shape());
 
-    println!("input");
-    println!("{}\n", input);
+    let max_pooling = MaxPooling2DNonBatch::new(1, 2);
+    max_pooling.forward(input.view()).unwrap();
 
-    let mut conv2d = Conv2DNonBatch::init(3, 3, 2);
+    // let mut conv2d = Conv2DNonBatch::new(3, 3, 2);
 
-    let out = conv2d.forward(input.view());
-    let out_grad = ArrayD::<f32>::ones(out.shape());
+    // let out = conv2d.forward(input.view());
+    // let out_grad = ArrayD::<f32>::ones(out.shape());
 
     // println!("out");
     // println!("{}\n", out);
     // println!("out grad");
     // println!("{}\n", out_grad);
 
-    conv2d.backpropagation(input.view(), &mut input_grad, out_grad.view());
+    // conv2d.backpropagation(input.view(), &mut input_grad, out_grad.view());
     // println!("input grad");
     // println!("{}", input_grad);
 }
