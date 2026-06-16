@@ -6,3 +6,6 @@ pub use max_pooling::*;
 
 mod err_enum;
 pub use err_enum::*;
+
+mod linear;
+pub use linear::*;

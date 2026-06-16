@@ -1,30 +1,44 @@
 use std::{iter::Sum, ops::Index};
 
 use ndarray::{Array2, ArrayBase, ArrayD, Axis, Dim, IxDynImpl, OwnedRepr, Slice, s};
-use neo_cnn::{Conv2DNonBatch, MaxPooling2DNonBatch};
+use neo_cnn::{Conv2DNonBatch, LinaerNonBatch, MaxPooling2DNonBatch};
 use rand::random;
 
 fn main() {
-    let input = ArrayD::<f32>::from_shape_vec(
-        &[2, 4, 4][..],
-        (0..2 * 4 * 4).map(|idx| random()).collect::<Vec<f32>>(),
-    )
-    .unwrap();
-    let mut input_grad = ArrayD::<f32>::zeros(input.shape());
+    let input = ArrayD::<f32>::ones(&[2, 3][..]);
+    let mut input_gradient = ArrayD::<f32>::zeros(input.shape());
 
-    println!("{}", input);
-    println!("{}", input_grad);
+    let mut linear = LinaerNonBatch::new(3, 4);
 
-    let max_pooling = MaxPooling2DNonBatch::new(1, 2);
-    let out = max_pooling.forward(input.view()).unwrap();
-    let out_grad = ArrayD::<f32>::ones(out.shape());
-    println!("\n{}", out);
+    let output = linear.forward(input.view());
+    let output_gradinet = ArrayD::<f32>::ones(output.shape());
 
-    max_pooling
-        .backpropagation(input.view(), input_grad.view_mut(), out_grad.view())
-        .unwrap();
+    linear.backpropagation(
+        input.view(),
+        input_gradient.view_mut(),
+        output_gradinet.view(),
+    );
 
-    println!("{}", input_grad);
+    // let input = ArrayD::<f32>::from_shape_vec(
+    //     &[2, 4, 4][..],
+    //     (0..2 * 4 * 4).map(|idx| random()).collect::<Vec<f32>>(),
+    // )
+    // .unwrap();
+    // let mut input_grad = ArrayD::<f32>::zeros(input.shape());
+
+    // println!("{}", input);
+    // println!("{}", input_grad);
+
+    // let max_pooling = MaxPooling2DNonBatch::new(1, 2);
+    // let out = max_pooling.forward(input.view()).unwrap();
+    // let out_grad = ArrayD::<f32>::ones(out.shape());
+    // println!("\n{}", out);
+
+    // max_pooling
+    //     .backpropagation(input.view(), input_grad.view_mut(), out_grad.view())
+    //     .unwrap();
+
+    // println!("{}", input_grad);
 
     // let mut conv2d = Conv2DNonBatch::new(3, 3, 2);
 
