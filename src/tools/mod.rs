@@ -9,3 +9,6 @@ pub use err_enum::*;
 
 mod linear;
 pub use linear::*;
+
+mod softmax;
+pub use softmax::*;
