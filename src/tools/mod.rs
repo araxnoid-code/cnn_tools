@@ -1,14 +1,5 @@
-mod conv2d;
-pub use conv2d::*;
+mod method;
+pub use method::*;
 
-mod max_pooling;
-pub use max_pooling::*;
-
-mod err_enum;
-pub use err_enum::*;
-
-mod linear;
-pub use linear::*;
-
-mod softmax;
-pub use softmax::*;
+mod function;
+pub use function::*;

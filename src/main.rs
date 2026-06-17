@@ -1,16 +1,25 @@
 use std::{iter::Sum, ops::Index};
 
 use ndarray::{Array2, ArrayBase, ArrayD, Axis, Dim, IxDynImpl, OwnedRepr, Slice, s};
-use neo_cnn::{Conv2DNonBatch, LinaerNonBatch, MaxPooling2DNonBatch, softmax};
+use neo_cnn::Softmax;
 use rand::random;
 
 fn main() {
-    let input = ArrayD::<f32>::from_shape_vec(&[2, 3][..], vec![1., 4., 2., 7., 5., 9.]).unwrap();
+    let input =
+        ArrayD::<f32>::from_shape_vec(&[2, 3][..], vec![1.0, 2.0, 3.0, 1.0, 1.0, 0.0]).unwrap();
     let mut input_gradient = ArrayD::<f32>::zeros(input.shape());
 
     println!("{}", input);
 
-    let pred = softmax(input.view(), 1).unwrap();
+    let softmax = Softmax::new(1);
+    let result = softmax.forward(input.view()).unwrap();
+    println!("{}", result);
+    let grad =
+        ArrayD::<f32>::from_shape_vec(&[2, 3][..], vec![0.5, -0.3, 0.2, 0.1, 0.4, -0.5]).unwrap();
+
+    softmax
+        .backward(input.view(), input_gradient.view_mut(), grad.view())
+        .unwrap();
 
     // let mut linear = LinaerNonBatch::new(3, 4);
 
