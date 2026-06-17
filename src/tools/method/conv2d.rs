@@ -34,7 +34,7 @@ impl Conv2DNonBatch {
         }
     }
 
-    pub fn backpropagation(
+    pub fn backward(
         &mut self,
         input: ArrayViewD<f32>,
         mut input_grad: ArrayViewMutD<f32>,

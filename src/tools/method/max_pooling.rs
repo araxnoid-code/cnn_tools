@@ -14,7 +14,7 @@ impl MaxPooling2DNonBatch {
         Self { stride, pool_size }
     }
 
-    pub fn backpropagation(
+    pub fn backward(
         &self,
         input: ArrayViewD<f32>,
         mut input_grad: ArrayViewMutD<f32>,
