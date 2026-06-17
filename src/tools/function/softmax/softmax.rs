@@ -1,20 +1,18 @@
 use std::ops::AddAssign;
 
-use ndarray::{ArrayBase, ArrayViewD, ArrayViewMutD, Axis, Dim, IxDynImpl, OwnedRepr};
+use ndarray::{ArrayBase, ArrayD, ArrayViewD, ArrayViewMutD, Axis, Dim, IxDynImpl, OwnedRepr};
 
 pub struct Softmax {
+    saved: Option<ArrayD<f32>>,
     axis: usize,
 }
 
 impl Softmax {
     pub fn new(axis: usize) -> Softmax {
-        Self { axis }
+        Self { axis, saved: None }
     }
 
-    pub fn forward(
-        &self,
-        input: ArrayViewD<'_, f32>,
-    ) -> Result<ArrayBase<OwnedRepr<f32>, Dim<IxDynImpl>, f32>, &str> {
+    pub fn forward(&mut self, input: ArrayViewD<'_, f32>) -> Result<(), &str> {
         if self.axis > input.len() {
             return Err("softmax error");
         }
@@ -27,17 +25,24 @@ impl Softmax {
         let denom = sum.to_shape(shape).unwrap();
 
         let result = &exp / &denom.view();
+        self.saved = Some(result);
 
-        Ok(result)
+        Ok(())
+    }
+
+    pub fn get_ouput(&self) -> Option<ArrayBase<ndarray::ViewRepr<&f32>, Dim<IxDynImpl>, f32>> {
+        if let Some(arr) = &self.saved {
+            return Some(arr.view());
+        }
+        None
     }
 
     pub fn backward(
         &self,
-        input: ArrayViewD<f32>,
         mut input_gradient: ArrayViewMutD<f32>,
         gradient: ArrayViewD<f32>,
     ) -> Result<(), &str> {
-        let y = self.forward(input)?;
+        let y = self.saved.as_ref().ok_or("error")?.view();
 
         let gy_sum = (&y * &gradient)
             .sum_axis(Axis(self.axis))

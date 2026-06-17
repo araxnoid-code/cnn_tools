@@ -11,14 +11,14 @@ fn main() {
 
     println!("{}", input);
 
-    let softmax = Softmax::new(1);
-    let result = softmax.forward(input.view()).unwrap();
-    println!("{}", result);
+    let mut softmax = Softmax::new(1);
+    softmax.forward(input.view()).unwrap();
+    println!("{}", softmax.get_ouput().unwrap());
     let grad =
         ArrayD::<f32>::from_shape_vec(&[2, 3][..], vec![0.5, -0.3, 0.2, 0.1, 0.4, -0.5]).unwrap();
 
     softmax
-        .backward(input.view(), input_gradient.view_mut(), grad.view())
+        .backward(input_gradient.view_mut(), grad.view())
         .unwrap();
 
     // let mut linear = LinaerNonBatch::new(3, 4);
