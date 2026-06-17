@@ -38,6 +38,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cnn_tools"
+version = "0.1.0"
+dependencies = [
+ "ndarray",
+ "rand",
+ "rayon",
+]
+
+[[package]]
 name = "cpufeatures"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -195,15 +204,6 @@ dependencies = [
  "portable-atomic",
  "portable-atomic-util",
  "rawpointer",
-]
-
-[[package]]
-name = "neo_cnn"
-version = "0.1.0"
-dependencies = [
- "ndarray",
- "rand",
- "rayon",
 ]
 
 [[package]]

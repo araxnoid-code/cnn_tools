@@ -1,7 +1,8 @@
 use std::{iter::Sum, ops::Index};
 
+use cnn_tools::Softmax;
 use ndarray::{Array2, ArrayBase, ArrayD, Axis, Dim, IxDynImpl, OwnedRepr, Slice, s};
-use neo_cnn::Softmax;
+
 use rand::random;
 
 fn main() {
