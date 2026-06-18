@@ -17,47 +17,48 @@ impl MaxPooling2DNonBatch {
     pub fn backward(
         &self,
         input: ArrayViewD<f32>,
-        mut input_grad: ArrayViewMutD<f32>,
+        mut input_grad: Option<ArrayViewMutD<f32>>,
         gradient: ArrayViewD<f32>,
     ) -> Result<(), &str> {
-        let input_shape = input.shape();
-        if input_shape.len() != 3 {
-            return Err("ukuran input untuk MaxPooling2DNonBatch haruslah 3D");
-        } else if input_shape[1] != input_shape[2] {
-            return Err("untuk saat ini, ukuran input haruslah sama untuk width dan high nya");
-        }
+        if let Some(input_grad) = &mut input_grad {
+            let input_shape = input.shape();
+            if input_shape.len() != 3 {
+                return Err("ukuran input untuk MaxPooling2DNonBatch haruslah 3D");
+            } else if input_shape[1] != input_shape[2] {
+                return Err("untuk saat ini, ukuran input haruslah sama untuk width dan high nya");
+            }
 
-        let channel_size = input_shape[0];
-        let out_size = ((input_shape[1] - self.pool_size) / self.stride) + 1;
+            let channel_size = input_shape[0];
+            let out_size = ((input_shape[1] - self.pool_size) / self.stride) + 1;
 
-        for channel_idx in 0..channel_size {
-            for row in 0..out_size {
-                let row_start = row * self.stride;
-                for coll in 0..out_size {
-                    let coll_start = coll * self.stride;
-                    let slice = input.slice(s![
-                        channel_idx..channel_idx + 1,
-                        row_start..row_start + self.pool_size,
-                        coll_start..coll_start + self.pool_size
-                    ]);
-
-                    let ((_, r, c), _) = slice
-                        .indexed_iter()
-                        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                        .ok_or("MaxPooling2DNonBatch Error, terdapat array slicing kosong")?;
-
-                    let grad = gradient.index([channel_idx, row, coll]);
-                    input_grad
-                        .slice_mut(s![
+            for channel_idx in 0..channel_size {
+                for row in 0..out_size {
+                    let row_start = row * self.stride;
+                    for coll in 0..out_size {
+                        let coll_start = coll * self.stride;
+                        let slice = input.slice(s![
                             channel_idx..channel_idx + 1,
-                            row_start + r,
-                            coll_start + c
-                        ])
-                        .add_assign(*grad);
+                            row_start..row_start + self.pool_size,
+                            coll_start..coll_start + self.pool_size
+                        ]);
+
+                        let ((_, r, c), _) = slice
+                            .indexed_iter()
+                            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                            .ok_or("MaxPooling2DNonBatch Error, terdapat array slicing kosong")?;
+
+                        let grad = gradient.index([channel_idx, row, coll]);
+                        input_grad
+                            .slice_mut(s![
+                                channel_idx..channel_idx + 1,
+                                row_start + r,
+                                coll_start + c
+                            ])
+                            .add_assign(*grad);
+                    }
                 }
             }
         }
-
         Ok(())
     }
 
