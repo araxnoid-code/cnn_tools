@@ -23,18 +23,20 @@ pub fn softmax(
 
 pub fn softmax_backward(
     input: ArrayViewD<'_, f32>,
-    mut input_gradient: ArrayViewMutD<'_, f32>,
+    mut input_gradient: Option<ArrayViewMutD<'_, f32>>,
     axis: usize,
     gradient: ArrayViewD<f32>,
 ) -> Result<(), &'static str> {
-    let y = softmax(input, axis)?;
+    if let Some(input_gradient) = &mut input_gradient {
+        let y = softmax(input, axis)?;
 
-    let d = (&y.view() * &gradient)
-        .sum_axis(Axis(axis))
-        .insert_axis(Axis(axis));
+        let d = (&y.view() * &gradient)
+            .sum_axis(Axis(axis))
+            .insert_axis(Axis(axis));
 
-    let d = y * (&gradient - &d.view());
-    input_gradient.add_assign(&d);
+        let d = y * (&gradient - &d.view());
+        input_gradient.add_assign(&d);
+    }
 
     Ok(())
 }

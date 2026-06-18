@@ -39,17 +39,19 @@ impl Softmax {
 
     pub fn backward(
         &self,
-        mut input_gradient: ArrayViewMutD<f32>,
+        mut input_gradient: Option<ArrayViewMutD<f32>>,
         gradient: ArrayViewD<f32>,
     ) -> Result<(), &str> {
-        let y = self.saved.as_ref().ok_or("error")?.view();
+        if let Some(input_gradient) = &mut input_gradient {
+            let y = self.saved.as_ref().ok_or("error")?.view();
 
-        let gy_sum = (&y * &gradient)
-            .sum_axis(Axis(self.axis))
-            .insert_axis(Axis(self.axis));
+            let gy_sum = (&y * &gradient)
+                .sum_axis(Axis(self.axis))
+                .insert_axis(Axis(self.axis));
 
-        let grad_input = &y * (&gradient - &gy_sum);
-        input_gradient.add_assign(&grad_input);
+            let grad_input = &y * (&gradient - &gy_sum);
+            input_gradient.add_assign(&grad_input);
+        }
 
         Ok(())
     }
