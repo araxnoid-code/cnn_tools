@@ -35,11 +35,13 @@ impl LinaerNonBatch {
     pub fn backward(
         &mut self,
         input: ArrayViewD<f32>,
-        mut input_grad: ArrayViewMutD<f32>,
+        mut input_grad: Option<ArrayViewMutD<f32>>,
         gradient: ArrayViewD<f32>,
     ) {
-        let d_input = gradient.dot(&self.weight.t());
-        input_grad.add_assign(&d_input);
+        if let Some(input_grad) = &mut input_grad {
+            let d_input = gradient.dot(&self.weight.t());
+            input_grad.add_assign(&d_input);
+        }
 
         let d_weight = input.t().dot(&gradient);
         self.gradient_weight.add_assign(&d_weight);

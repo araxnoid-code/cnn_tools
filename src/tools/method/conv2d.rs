@@ -37,7 +37,7 @@ impl Conv2DNonBatch {
     pub fn backward(
         &mut self,
         input: ArrayViewD<f32>,
-        mut input_grad: ArrayViewMutD<f32>,
+        mut input_grad: Option<ArrayViewMutD<f32>>,
         gradient: ArrayViewD<f32>,
     ) {
         let channel_size = self.in_channel;
@@ -79,15 +79,16 @@ impl Conv2DNonBatch {
                             ])
                             .add_assign(&d_kernel);
 
-                        let d_input_kernel = kernel_matrix * *grad;
-                        input_grad
-                            .slice_mut(s![
-                                channel_idx..channel_idx + 1,
-                                row..row + self.kernel_size,
-                                coll..coll + self.kernel_size
-                            ])
-                            .add_assign(&d_input_kernel);
-                        // .add_assign((slice * *grad));
+                        if let Some(input_grad) = &mut input_grad {
+                            let d_input_kernel = kernel_matrix * *grad;
+                            input_grad
+                                .slice_mut(s![
+                                    channel_idx..channel_idx + 1,
+                                    row..row + self.kernel_size,
+                                    coll..coll + self.kernel_size
+                                ])
+                                .add_assign(&d_input_kernel);
+                        }
                     }
                 }
             }
