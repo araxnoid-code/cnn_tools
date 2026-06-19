@@ -30,13 +30,7 @@ impl LinaerNonBatch {
             )
             .unwrap(),
             gradient_weight: ArrayD::<f32>::zeros(vec![in_feature, out_feature]),
-            bias: ArrayD::<f32>::from_shape_vec(
-                vec![out_feature],
-                (0..out_feature)
-                    .map(|_| normal.sample(&mut rng))
-                    .collect::<Vec<f32>>(),
-            )
-            .unwrap(),
+            bias: ArrayD::<f32>::zeros(vec![out_feature]),
             gradient_bias: ArrayD::<f32>::zeros(vec![out_feature]),
         }
     }

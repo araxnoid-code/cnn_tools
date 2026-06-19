@@ -4,6 +4,8 @@ use ndarray::{
     Array1, Array2, Array4, ArrayBase, ArrayD, ArrayViewD, ArrayViewMutD, Axis, Dim, OwnedRepr,
     Slice, s,
 };
+use rand::rng;
+use rand_distr::{Distribution, Normal};
 
 pub struct Conv2DNonBatch {
     kernel: Array4<f32>,
@@ -18,15 +20,18 @@ pub struct Conv2DNonBatch {
 impl Conv2DNonBatch {
     pub fn new(in_channel: usize, out_channel: usize, kernel_size: usize) -> Conv2DNonBatch {
         let len = out_channel * in_channel * kernel_size * kernel_size;
+        let std = (2. / (in_channel * kernel_size * kernel_size) as f32).sqrt();
+        let normal = Normal::new(0., std).unwrap();
+        let mut rng = rng();
 
         Self {
             kernel: Array4::<f32>::from_shape_vec(
                 [out_channel, in_channel, kernel_size, kernel_size],
-                (0..len).map(|i| i as f32).collect(),
+                (0..len).map(|_| normal.sample(&mut rng)).collect(),
             )
             .unwrap(),
             grads_grad: Array4::<f32>::zeros([out_channel, in_channel, kernel_size, kernel_size]),
-            bias: Array1::<f32>::ones([out_channel]),
+            bias: Array1::<f32>::zeros([out_channel]),
             bias_grad: Array1::<f32>::zeros([out_channel]),
             in_channel,
             kernel_size,
