@@ -20,7 +20,9 @@ impl Softmax {
         let mut shape = input.shape().to_vec();
         shape[self.axis] = 1;
 
+        // println!("{}", input);
         let exp = input.exp();
+        // println!("{}", exp);
         let sum = exp.sum_axis(Axis(self.axis));
         let denom = sum.to_shape(shape).unwrap();
 

@@ -20,6 +20,8 @@ pub struct Conv2DNonBatch {
 impl Conv2DNonBatch {
     pub fn new(in_channel: usize, out_channel: usize, kernel_size: usize) -> Conv2DNonBatch {
         let len = out_channel * in_channel * kernel_size * kernel_size;
+
+        // He
         let std = (2. / (in_channel * kernel_size * kernel_size) as f32).sqrt();
         let normal = Normal::new(0., std).unwrap();
         let mut rng = rng();
