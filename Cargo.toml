@@ -9,4 +9,5 @@ path = "src/lib.rs"
 [dependencies]
 ndarray = "0.17.2"
 rand = "0.10.1"
+rand_distr = "0.6.0"
 rayon = "1.12.0"

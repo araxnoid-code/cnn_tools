@@ -4,6 +4,8 @@ use ndarray::{
     Array2, ArrayBase, ArrayD, ArrayViewD, ArrayViewMutD, Axis, Dim, IxDynImpl, OwnedRepr,
     linalg::Dot,
 };
+use rand::rng;
+use rand_distr::{Distribution, Normal, StandardNormal};
 
 pub struct LinaerNonBatch {
     weight: ArrayD<f32>,
@@ -14,18 +16,25 @@ pub struct LinaerNonBatch {
 
 impl LinaerNonBatch {
     pub fn new(in_feature: usize, out_feature: usize) -> LinaerNonBatch {
+        // He Init
+        let std = (2.0 / in_feature as f32).sqrt();
+        let normal = Normal::new(0., std).unwrap();
+        let mut rng = rng();
+
         Self {
             weight: ArrayD::<f32>::from_shape_vec(
                 vec![in_feature, out_feature],
                 (0..in_feature * out_feature)
-                    .map(|idx| idx as f32)
+                    .map(|_| normal.sample(&mut rng))
                     .collect::<Vec<f32>>(),
             )
             .unwrap(),
             gradient_weight: ArrayD::<f32>::zeros(vec![in_feature, out_feature]),
             bias: ArrayD::<f32>::from_shape_vec(
                 vec![out_feature],
-                (0..out_feature).map(|idx| idx as f32).collect::<Vec<f32>>(),
+                (0..out_feature)
+                    .map(|_| normal.sample(&mut rng))
+                    .collect::<Vec<f32>>(),
             )
             .unwrap(),
             gradient_bias: ArrayD::<f32>::zeros(vec![out_feature]),
