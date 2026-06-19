@@ -6,3 +6,6 @@ pub use function::*;
 
 mod loss;
 pub use loss::*;
+
+mod activation;
+pub use activation::*;
