@@ -5,7 +5,7 @@ use ndarray::{
     linalg::Dot,
 };
 use rand::rng;
-use rand_distr::{Distribution, Normal, StandardNormal};
+use rand_distr::{Distribution, Normal, StandardNormal, num_traits::Pow};
 
 pub struct LinaerNonBatch {
     in_feature: usize,
@@ -26,6 +26,28 @@ pub struct LinaerNonBatch {
 }
 
 impl LinaerNonBatch {
+    pub fn adam_optim(&mut self, lr: f32) {
+        // weight
+        self.m_weight = &self.m_weight * self.b_1 + (1. - self.b_1) * &self.gradient_weight;
+        let m_correction = &self.m_weight / (1. - self.b_1.powi(self.t as i32));
+
+        self.v_weight = &self.v_weight * self.b_2 + (1. - self.b_2) * self.gradient_weight.pow2();
+        let v_correction = &self.v_weight / (1. - self.b_2.powi(self.t as i32));
+
+        self.weight = &self.weight - lr / (self.e + v_correction.sqrt()) * m_correction;
+
+        // bias
+        self.m_bias = &self.m_bias * self.b_1 + (1. - self.b_1) * &self.gradient_bias;
+        let m_correction = &self.m_bias / (1. - self.b_1.powi(self.t as i32));
+
+        self.v_bias = &self.v_bias * self.b_2 + (1. - self.b_2) * self.gradient_bias.pow2();
+        let v_correction = &self.v_bias / (1. - self.b_2.powi(self.t as i32));
+
+        self.bias = &self.bias - lr / (self.e + v_correction.sqrt()) * m_correction;
+
+        self.t += 1;
+    }
+
     pub fn zero_grad(&mut self) {
         self.gradient_weight = ArrayD::zeros(vec![self.in_feature, self.out_feature]);
 

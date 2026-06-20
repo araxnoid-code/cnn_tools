@@ -137,4 +137,13 @@ fn main() {
     );
 
     conv2d_1.backward(sample.view(), None, conv2d_1_result_gradient.view());
+
+    // optim
+    let lr = 0.0001;
+    conv2d_1.adam_optim(lr);
+
+    conv2d_2.adam_optim(lr);
+
+    linear_1.adam_optim(lr);
+    linear_2.adam_optim(lr);
 }
