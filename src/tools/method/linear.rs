@@ -8,13 +8,30 @@ use rand::rng;
 use rand_distr::{Distribution, Normal, StandardNormal};
 
 pub struct LinaerNonBatch {
+    in_feature: usize,
+    out_feature: usize,
     weight: ArrayD<f32>,
     gradient_weight: ArrayD<f32>,
     bias: ArrayD<f32>,
     gradient_bias: ArrayD<f32>,
+
+    e: f32,
+    t: usize,
+    v_weight: ArrayD<f32>,
+    m_weight: ArrayD<f32>,
+    v_bias: ArrayD<f32>,
+    m_bias: ArrayD<f32>,
+    b_1: f32,
+    b_2: f32,
 }
 
 impl LinaerNonBatch {
+    pub fn zero_grad(&mut self) {
+        self.gradient_weight = ArrayD::zeros(vec![self.in_feature, self.out_feature]);
+
+        self.gradient_bias = ArrayD::<f32>::zeros(vec![self.out_feature]);
+    }
+
     pub fn new(in_feature: usize, out_feature: usize) -> LinaerNonBatch {
         // He Init
         let std = (2.0 / in_feature as f32).sqrt();
@@ -22,6 +39,8 @@ impl LinaerNonBatch {
         let mut rng = rng();
 
         Self {
+            in_feature,
+            out_feature,
             weight: ArrayD::<f32>::from_shape_vec(
                 vec![in_feature, out_feature],
                 (0..in_feature * out_feature)
@@ -32,6 +51,15 @@ impl LinaerNonBatch {
             gradient_weight: ArrayD::<f32>::zeros(vec![in_feature, out_feature]),
             bias: ArrayD::<f32>::zeros(vec![out_feature]),
             gradient_bias: ArrayD::<f32>::zeros(vec![out_feature]),
+
+            t: 1,
+            e: 0.00000001,
+            b_1: 0.9,
+            b_2: 0.999,
+            m_weight: ArrayD::<f32>::zeros(vec![in_feature, out_feature]),
+            v_weight: ArrayD::<f32>::zeros(vec![in_feature, out_feature]),
+            m_bias: ArrayD::<f32>::zeros(vec![out_feature]),
+            v_bias: ArrayD::<f32>::zeros(vec![out_feature]),
         }
     }
 

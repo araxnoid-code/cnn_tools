@@ -91,8 +91,8 @@ impl Conv2DNonBatch {
             m_kernel: Array4::<f32>::zeros([out_channel, in_channel, kernel_size, kernel_size]),
             v_bias: Array1::<f32>::zeros([out_channel]),
             m_bias: Array1::<f32>::zeros([out_channel]),
-            b_1: 0.999,
-            b_2: 0.9,
+            b_1: 0.9,
+            b_2: 0.999,
         }
     }
 
