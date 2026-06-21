@@ -27,9 +27,9 @@ fn main() {
                 let mut blue = Vec::with_capacity(64);
                 for rgb in pixels.pixels() {
                     let value = rgb.0;
-                    red.push(value[0] / 64.);
-                    green.push(value[1] / 64.);
-                    blue.push(value[2] / 64.);
+                    red.push(value[0] / 1.);
+                    green.push(value[1] / 1.);
+                    blue.push(value[2] / 1.);
                 }
                 let rgb_vec = [red, green, blue].concat();
                 let array = ArrayD::<f32>::from_shape_vec(vec![3, 64, 64], rgb_vec).unwrap();
@@ -58,9 +58,9 @@ fn main() {
                 let mut blue = Vec::with_capacity(64);
                 for rgb in pixels.pixels() {
                     let value = rgb.0;
-                    red.push(value[0] / 32.);
-                    green.push(value[1] / 32.);
-                    blue.push(value[2] / 32.);
+                    red.push(value[0] / 1.);
+                    green.push(value[1] / 1.);
+                    blue.push(value[2] / 1.);
                 }
                 let rgb_vec = [red, green, blue].concat();
                 let array = ArrayD::<f32>::from_shape_vec(vec![3, 64, 64], rgb_vec).unwrap();
@@ -83,28 +83,30 @@ fn model(batch: Vec<(ArrayD<f32>, ArrayD<f32>)>) {
     let mut conv2d_2 = Conv2DNonBatch::new(8, 16, 3);
     let max_pooling_2 = MaxPooling2DNonBatch::new(2, 2);
 
-    let mut linear_1 = LinaerNonBatch::new(3136, 512);
+    let mut conv2d_3 = Conv2DNonBatch::new(16, 32, 3);
+    let max_pooling_3 = MaxPooling2DNonBatch::new(2, 2);
+
+    let mut linear_1 = LinaerNonBatch::new(1152, 512);
     let mut linear_2 = LinaerNonBatch::new(512, 2);
     let mut softmax = Softmax::new(1);
     // model
 
-    for epoch in 0..20 {
+    for epoch in 0..32 {
         let mut mean = 0.;
         for (idx, (sample, label)) in batch.iter().enumerate() {
-            // println!("idx: {}", idx);
             let conv2d_1_result = conv2d_1.forward(sample.view());
-
             let relu_1 = relu(conv2d_1_result.view());
-
             let max_pooling_1_result = max_pooling_1.forward(relu_1.view()).unwrap();
 
             let conv2d_2_result = conv2d_2.forward(max_pooling_1_result.view());
-
             let relu_2 = relu(conv2d_2_result.view());
-
             let max_pooling_2_result = max_pooling_2.forward(relu_2.view()).unwrap();
 
-            let flatten = max_pooling_2_result
+            let conv2d_3_result = conv2d_3.forward(max_pooling_2_result.view());
+            let relu_conv2d_3 = relu(conv2d_3_result.view());
+            let max_pooling_3_result = max_pooling_3.forward(relu_conv2d_3.view()).unwrap();
+
+            let flatten = max_pooling_3_result
                 .flatten()
                 .into_dyn()
                 .insert_axis(Axis(0));
@@ -122,21 +124,29 @@ fn model(batch: Vec<(ArrayD<f32>, ArrayD<f32>)>) {
 
             let loss = cross_entropy_loss(prop.view(), label.view(), 1);
             mean += loss[[0, 0]];
-            // println!("epoch {}, sample no {}, loss: {}", epoch, idx, loss);
 
             // backpropagation
             let mut conv2d_1_result_gradient = ArrayD::<f32>::zeros(conv2d_1_result.shape());
             let mut relu_1_gradient = ArrayD::<f32>::zeros(relu_1.shape());
             let mut max_pooling_1_result_gradient =
                 ArrayD::<f32>::zeros(max_pooling_1_result.shape());
+
             let mut conv2d_2_result_gradient = ArrayD::<f32>::zeros(conv2d_2_result.shape());
             let mut relu_2_gradient = ArrayD::<f32>::zeros(relu_2.shape());
-            let max_pooling_2_result_gradient;
+            let mut max_pooling_2_result_gradient =
+                ArrayD::<f32>::zeros(max_pooling_2_result.shape());
+
+            let mut conv2d_3_result_gradient = ArrayD::<f32>::zeros(conv2d_3_result.shape());
+            let mut relu_conv2d_3_gradient = ArrayD::<f32>::zeros(relu_conv2d_3.shape());
+            let max_pooling_3_result_gradient;
+
+            let mut flatten_gradient = ArrayD::<f32>::zeros(flatten.shape());
             let mut relu_3_gradient = ArrayD::<f32>::zeros(relu_3.shape());
             let mut linear_1_result_gradient = ArrayD::<f32>::zeros(linear_1_result.shape());
             let mut relu_res_gradient = ArrayD::<f32>::zeros(relu_res.shape());
             let mut linear_2_result_gradient = ArrayD::<f32>::zeros(linear_2_result.shape());
             let mut gradient_prop = ArrayD::<f32>::zeros(prop.shape());
+
             let loss_gradient = ArrayD::<f32>::ones(loss.shape());
             cross_entropy_loss_backward(
                 prop.view(),
@@ -166,12 +176,38 @@ fn model(batch: Vec<(ArrayD<f32>, ArrayD<f32>)>) {
                 Some(relu_3_gradient.view_mut()),
                 linear_1_result_gradient.view(),
             );
+            relu_backward(
+                flatten.view(),
+                Some(flatten_gradient.view_mut()),
+                relu_3_gradient.view(),
+            );
 
-            max_pooling_2_result_gradient = relu_3_gradient
-                .to_shape(max_pooling_2_result.shape())
+            max_pooling_3_result_gradient = flatten_gradient
+                .to_shape(max_pooling_3_result.shape())
                 .unwrap()
                 .to_owned();
 
+            max_pooling_3
+                .backward(
+                    relu_conv2d_3.view(),
+                    Some(relu_conv2d_3_gradient.view_mut()),
+                    max_pooling_3_result_gradient.view(),
+                )
+                .unwrap();
+
+            relu_backward(
+                conv2d_3_result.view(),
+                Some(conv2d_3_result_gradient.view_mut()),
+                relu_conv2d_3_gradient.view(),
+            );
+
+            conv2d_3.backward(
+                max_pooling_2_result.view(),
+                Some(max_pooling_2_result_gradient.view_mut()),
+                conv2d_3_result_gradient.view(),
+            );
+
+            //
             max_pooling_2
                 .backward(
                     relu_2.view(),
@@ -209,15 +245,17 @@ fn model(batch: Vec<(ArrayD<f32>, ArrayD<f32>)>) {
             conv2d_1.backward(sample.view(), None, conv2d_1_result_gradient.view());
 
             // optim
-            let lr = 0.001;
+            let lr = 0.0001;
             conv2d_1.adam_optim(lr);
             conv2d_2.adam_optim(lr);
+            conv2d_3.adam_optim(lr);
             linear_1.adam_optim(lr);
             linear_2.adam_optim(lr);
 
             // zero grad
             conv2d_1.zero_grad();
             conv2d_2.zero_grad();
+            conv2d_3.zero_grad();
             linear_1.zero_grad();
             linear_2.zero_grad();
         }
