@@ -257,7 +257,7 @@ impl Conv2DNonBatch {
         output
     }
 
-    pub fn load_params(&mut self, path: String) {
+    pub fn load_params(&mut self, path: &str) {
         let mut path = File::open(path).unwrap();
 
         let mut json = String::new();
@@ -280,7 +280,7 @@ impl Conv2DNonBatch {
         self.bias = bias;
     }
 
-    pub fn saving_params(&self, path: String) -> Result<(), &'static str> {
+    pub fn saving_params(&self, path: &str) -> Result<(), &'static str> {
         let kernel = self.kernel.flatten().to_vec();
         let bias = self.bias.flatten().to_vec();
 

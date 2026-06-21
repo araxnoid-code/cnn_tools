@@ -1,4 +1,8 @@
-use std::ops::AddAssign;
+use std::{
+    fs::File,
+    io::{Read, Write},
+    ops::AddAssign,
+};
 
 use ndarray::{
     Array2, ArrayBase, ArrayD, ArrayViewD, ArrayViewMutD, Axis, Dim, IxDynImpl, OwnedRepr,
@@ -6,6 +10,8 @@ use ndarray::{
 };
 use rand::rng;
 use rand_distr::{Distribution, Normal, StandardNormal, num_traits::Pow};
+use serde::{Deserialize, Serialize};
+use serde_json::to_string;
 
 pub struct LinaerNonBatch {
     in_feature: usize,
@@ -109,4 +115,36 @@ impl LinaerNonBatch {
     ) -> ArrayBase<OwnedRepr<f32>, Dim<IxDynImpl>, f32> {
         input.dot(&self.weight.view()) + &self.bias
     }
+
+    pub fn load_params(&mut self, path: &str) {
+        let mut file = File::open(path).unwrap();
+        let mut json = String::new();
+        file.read_to_string(&mut json).unwrap();
+        let params: LinaerNonBatchParams = serde_json::from_str(&json).unwrap();
+
+        let weight =
+            ArrayD::<f32>::from_shape_vec(vec![self.in_feature, self.out_feature], params.weight)
+                .unwrap();
+        let bias = ArrayD::<f32>::from_shape_vec(vec![self.out_feature], params.bias).unwrap();
+
+        self.weight = weight;
+        self.bias = bias;
+    }
+
+    pub fn saving_params(self, path: &str) {
+        let params = LinaerNonBatchParams {
+            weight: self.weight.flatten().to_vec(),
+            bias: self.bias.flatten().to_vec(),
+        };
+
+        let json = to_string(&params).unwrap();
+        let mut file = File::create(path).unwrap();
+        file.write_all(json.as_bytes()).unwrap();
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+struct LinaerNonBatchParams {
+    weight: Vec<f32>,
+    bias: Vec<f32>,
 }
