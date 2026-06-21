@@ -3,6 +3,7 @@ use std::ops::AddAssign;
 use ndarray::{
     ArrayBase, ArrayD, ArrayViewD, ArrayViewMutD, Dim, IndexLonger, IxDynImpl, OwnedRepr, s,
 };
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 pub struct MaxPooling2DNonBatch {
     stride: usize,

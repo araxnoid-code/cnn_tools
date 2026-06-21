@@ -164,9 +164,48 @@ impl Conv2DNonBatch {
         let channel_size = self.in_channel;
         let matrix_size = input.shape()[1];
 
+        // let out = (0..self.out_channel)
+        //     .into_par_iter()
+        //     .map(|out_kernel_idx| {
+        //         let mut kernel_save = vec![];
+        //         for row in 0..matrix_size - self.kernel_size + 1 {
+        //             for coll in 0..matrix_size - self.kernel_size + 1 {
+        //                 //
+        //                 let mut acc = Array2::<f32>::zeros([self.kernel_size, self.kernel_size]);
+        //                 for channel_idx in 0..channel_size {
+        //                     let kernel = self.kernel.slice(s![
+        //                         out_kernel_idx..out_kernel_idx + 1,
+        //                         channel_idx..channel_idx + 1,
+        //                         ..,
+        //                         ..
+        //                     ]);
+        //                     let kernel_matrix = kernel
+        //                         .to_shape([self.kernel_size, self.kernel_size])
+        //                         .unwrap();
+
+        //                     let slice = input.slice(s![
+        //                         channel_idx..channel_idx + 1,
+        //                         row..row + self.kernel_size,
+        //                         coll..coll + self.kernel_size
+        //                     ]);
+        //                     let slice_matrix = slice
+        //                         .to_shape([self.kernel_size, self.kernel_size])
+        //                         .unwrap();
+
+        //                     let result = slice_matrix * kernel_matrix;
+        //                     acc.add_assign(&result);
+        //                 }
+        //                 let sum = acc.sum() + self.bias.index([out_kernel_idx]);
+        //                 kernel_save.push(sum);
+        //             }
+        //         }
+        //         kernel_save
+        //     })
+        //     .collect::<Vec<Vec<f32>>>()
+        //     .concat();
+
         let mut out = vec![];
         for out_kernel_idx in 0..self.out_channel {
-            //
             for row in 0..matrix_size - self.kernel_size + 1 {
                 for coll in 0..matrix_size - self.kernel_size + 1 {
                     //

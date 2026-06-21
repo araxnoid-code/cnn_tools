@@ -7,7 +7,8 @@ edition = "2024"
 path = "src/lib.rs"
 
 [dependencies]
-ndarray = "0.17.2"
+image = "0.25.10"
+ndarray = {version = "0.17.2", features = ["rayon"]}
 rand = "0.10.1"
 rand_distr = "0.6.0"
 rayon = "1.12.0"
