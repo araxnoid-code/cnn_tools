@@ -1,4 +1,8 @@
-use std::ops::{AddAssign, Index, IndexMut};
+use std::{
+    fs::File,
+    io::{Read, Write},
+    ops::{AddAssign, Index, IndexMut},
+};
 
 use ndarray::{
     Array1, Array2, Array4, ArrayBase, ArrayD, ArrayViewD, ArrayViewMutD, Axis, Dim, OwnedRepr,
@@ -6,6 +10,7 @@ use ndarray::{
 };
 use rand::rng;
 use rand_distr::{Distribution, Normal};
+use serde::{Deserialize, Serialize};
 
 pub struct Conv2DNonBatch {
     kernel: Array4<f32>,
@@ -251,4 +256,46 @@ impl Conv2DNonBatch {
 
         output
     }
+
+    pub fn load_params(&mut self, path: String) {
+        let mut path = File::open(path).unwrap();
+
+        let mut json = String::new();
+        path.read_to_string(&mut json).unwrap();
+        let params: Conv2dNonBatchParams = serde_json::from_str(&json).unwrap();
+        let kernel = Array4::<f32>::from_shape_vec(
+            [
+                self.out_channel,
+                self.in_channel,
+                self.kernel_size,
+                self.kernel_size,
+            ],
+            params.kernel,
+        )
+        .unwrap();
+
+        let bias = Array1::<f32>::from_shape_vec([self.out_channel], params.bias).unwrap();
+
+        self.kernel = kernel;
+        self.bias = bias;
+    }
+
+    pub fn saving_params(&self, path: String) -> Result<(), &'static str> {
+        let kernel = self.kernel.flatten().to_vec();
+        let bias = self.bias.flatten().to_vec();
+
+        let params = Conv2dNonBatchParams { kernel, bias };
+        let string = serde_json::to_string(&params).map_err(|_| "error parsing to string")?;
+
+        let mut file = File::create(path).unwrap();
+        file.write_all(string.as_bytes()).unwrap();
+
+        Ok(())
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+struct Conv2dNonBatchParams {
+    kernel: Vec<f32>,
+    bias: Vec<f32>,
 }

@@ -89,6 +89,7 @@ fn model(batch: Vec<(ArrayD<f32>, ArrayD<f32>)>) {
     let mut linear_1 = LinaerNonBatch::new(1152, 512);
     let mut linear_2 = LinaerNonBatch::new(512, 2);
     let mut softmax = Softmax::new(1);
+
     // model
 
     for epoch in 0..32 {
