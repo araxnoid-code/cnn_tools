@@ -4,12 +4,71 @@ use cnn_tools::{
     Conv2DNonBatch, LinaerNonBatch, MaxPooling2DNonBatch, Softmax, cross_entropy_loss,
     cross_entropy_loss_backward, relu, relu_backward,
 };
-use image::{GenericImageView, imageops::FilterType};
+use image::imageops::FilterType;
 use ndarray::{ArrayBase, ArrayD, Axis, Dim, IxDynImpl, OwnedRepr, array};
+use plotters::{
+    backend::BitMapBackend,
+    chart::ChartBuilder,
+    drawing::IntoDrawingArea,
+    element::{Circle, EmptyElement},
+    series::PointSeries,
+    style::{
+        IntoFont, ShapeStyle,
+        full_palette::{BLACK, RED, WHITE},
+    },
+};
+
+fn draw_plot(caption: &str, series: Vec<(f32, f32)>, path: &str, size: (u32, u32)) {
+    let x_max = series
+        .iter()
+        .max_by(|x, y| x.0.partial_cmp(&y.0).unwrap())
+        .unwrap();
+    let y_max = series
+        .iter()
+        .max_by(|x, y| x.1.partial_cmp(&y.1).unwrap())
+        .unwrap();
+
+    let root = BitMapBackend::new(path, size).into_drawing_area();
+    root.fill(&WHITE).unwrap();
+    let mut chart = ChartBuilder::on(&root)
+        .caption(caption, ("sans-serif", 25).into_font())
+        .x_label_area_size(30)
+        .y_label_area_size(30)
+        .build_cartesian_2d(0f32..x_max.0, 0f32..y_max.1)
+        .unwrap();
+
+    chart.configure_mesh().draw().unwrap();
+
+    chart
+        .draw_series(PointSeries::of_element(series, 5, &RED, &|c, _, _| {
+            return EmptyElement::at(c) + Circle::new((0, 0), 3, ShapeStyle::from(&BLACK).filled());
+        }))
+        .unwrap();
+
+    root.present().unwrap();
+}
 
 fn main() {
-    let mut batch_sample_train = vec![];
+    let data = vec![
+        (0., 10.),
+        (10., 20.),
+        (8., 7.),
+        (8., 3.),
+        (9., 13.),
+        (1., 6.),
+    ];
 
+    draw_plot("data", data, "testing.png", (750, 750));
+
+    // let dataset = get_dataset();
+    // model(dataset);
+}
+
+fn get_dataset() -> Vec<(
+    ArrayBase<OwnedRepr<f32>, Dim<IxDynImpl>, f32>,
+    ArrayBase<OwnedRepr<f32>, Dim<IxDynImpl>, f32>,
+)> {
+    let mut batch_sample_train = vec![];
     let train_path_glasses = Path::new("train/glasses");
     let read_path = read_dir(train_path_glasses).expect("The Path Not Found");
     for entry in read_path {
@@ -71,8 +130,7 @@ fn main() {
             Err(e) => println!("error in entry, {}", e),
         }
     }
-
-    model(batch_sample_train);
+    batch_sample_train
 }
 
 fn model(batch: Vec<(ArrayD<f32>, ArrayD<f32>)>) {
