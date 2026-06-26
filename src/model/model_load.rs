@@ -4,8 +4,8 @@ use crate::{
     Conv2DNonBatch, LinaerNonBatch, MaxPooling2DNonBatch, Softmax, cross_entropy_loss, relu,
 };
 
-pub fn model_load(batch: Vec<(ArrayD<f32>, ArrayD<f32>)>) {
-    // let mut loss_save = vec![];
+pub fn model_load(batch: Vec<(ArrayD<f32>, ArrayD<f32>)>) -> Vec<(f32, f32)> {
+    let mut loss_save = vec![];
     // model
     let mut conv2d_1 = Conv2DNonBatch::new(3, 8, 3);
     conv2d_1.load_params("params/conv2d_1.json");
@@ -62,7 +62,7 @@ pub fn model_load(batch: Vec<(ArrayD<f32>, ArrayD<f32>)>) {
 
         let loss = cross_entropy_loss(predict.view(), label.view(), 1);
         println!("loss: {} | predict: {} | label: {}", loss, predict, label);
+        loss_save.push((idx as f32, loss[[0, 0]]));
     }
-
-    // loss_save.push((epoch as f32, mean_loss));
+    loss_save
 }
