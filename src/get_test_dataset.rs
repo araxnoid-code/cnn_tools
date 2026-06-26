@@ -8,15 +8,15 @@ pub fn get_test_dataset() -> Vec<(
     ArrayBase<OwnedRepr<f32>, Dim<IxDynImpl>, f32>,
 )> {
     let mut batch_sample_test = vec![];
-    let test_path_glasses = Path::new("test/glasses");
+    let test_path_glasses = Path::new("validate/glasses");
     let read_path = read_dir(test_path_glasses).expect("The Path Not Found");
     for entry in read_path {
         match entry {
             Ok(entry) => {
                 let file_name = entry.file_name().into_string().unwrap();
 
-                let img =
-                    image::open(format!("test/glasses/{}", file_name)).expect("image not found");
+                let img = image::open(format!("validate/glasses/{}", file_name))
+                    .expect("image not found");
 
                 let pixels = img.resize_exact(64, 64, FilterType::Nearest).into_rgb32f();
 
@@ -39,15 +39,15 @@ pub fn get_test_dataset() -> Vec<(
         }
     }
 
-    let test_path_glasses = Path::new("test/noglasses");
+    let test_path_glasses = Path::new("validate/noglasses");
     let read_path = read_dir(test_path_glasses).expect("The Path Not Found");
     for entry in read_path {
         match entry {
             Ok(entry) => {
                 let file_name = entry.file_name().into_string().unwrap();
 
-                let img =
-                    image::open(format!("test/noglasses/{}", file_name)).expect("image not found");
+                let img = image::open(format!("validate/noglasses/{}", file_name))
+                    .expect("image not found");
 
                 let pixels = img.resize_exact(64, 64, FilterType::Nearest).into_rgb32f();
 

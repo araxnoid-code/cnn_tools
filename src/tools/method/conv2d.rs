@@ -5,8 +5,7 @@ use std::{
 };
 
 use ndarray::{
-    Array1, Array2, Array4, ArrayBase, ArrayD, ArrayViewD, ArrayViewMutD, Axis, Dim, OwnedRepr,
-    Slice, s,
+    Array1, Array2, Array4, ArrayBase, ArrayD, ArrayViewD, ArrayViewMutD, Axis, Dim, OwnedRepr, s,
 };
 use rand::rng;
 use rand_distr::{Distribution, Normal};

@@ -12,21 +12,17 @@ pub fn model_train(batch: Vec<(ArrayD<f32>, ArrayD<f32>)>) -> Vec<(f32, f32)> {
     let max_pooling_1 = MaxPooling2DNonBatch::new(2, 2);
 
     let mut conv2d_2 = Conv2DNonBatch::new(8, 16, 3);
-
     let max_pooling_2 = MaxPooling2DNonBatch::new(2, 2);
 
     let mut conv2d_3 = Conv2DNonBatch::new(16, 32, 3);
-
     let max_pooling_3 = MaxPooling2DNonBatch::new(2, 2);
 
     let mut linear_1 = LinaerNonBatch::new(1152, 512);
-
     let mut linear_2 = LinaerNonBatch::new(512, 2);
-
     let mut softmax = Softmax::new(1);
     // model
 
-    for epoch in 0..20 {
+    for epoch in 0..30 {
         let mut mean = 0.;
         for (idx, (sample, label)) in batch.iter().enumerate() {
             let conv2d_1_result = conv2d_1.forward(sample.view());

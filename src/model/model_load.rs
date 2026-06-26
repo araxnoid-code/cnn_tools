@@ -61,7 +61,24 @@ pub fn model_load(batch: Vec<(ArrayD<f32>, ArrayD<f32>)>) -> Vec<(f32, f32)> {
         let predict = softmax.get_ouput().unwrap();
 
         let loss = cross_entropy_loss(predict.view(), label.view(), 1);
-        println!("loss: {} | predict: {} | label: {}", loss, predict, label);
+
+        let predict_flat = predict.flatten().to_vec();
+        let predict_index = if predict_flat[0] > predict_flat[1] {
+            0
+        } else {
+            1
+        };
+
+        let label_flat = label.flatten().to_vec();
+        let label_index = if label_flat[0] > label_flat[1] { 0 } else { 1 };
+
+        println!(
+            "loss: {} | predict: {} | label: {} | status: {}",
+            loss,
+            predict_index,
+            label_index,
+            label_index == predict_index
+        );
         loss_save.push((idx as f32, loss[[0, 0]]));
     }
     loss_save
