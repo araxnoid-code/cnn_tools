@@ -5,7 +5,7 @@ use crate::{
     cross_entropy_loss_backward, relu, relu_backward,
 };
 
-pub fn traint_model(batch: Vec<(ArrayD<f32>, ArrayD<f32>)>) -> Vec<(f32, f32)> {
+pub fn model_train(batch: Vec<(ArrayD<f32>, ArrayD<f32>)>) -> Vec<(f32, f32)> {
     let mut loss_save = vec![];
     // model
     let mut conv2d_1 = Conv2DNonBatch::new(3, 8, 3);
@@ -24,7 +24,6 @@ pub fn traint_model(batch: Vec<(ArrayD<f32>, ArrayD<f32>)>) -> Vec<(f32, f32)> {
     let mut linear_2 = LinaerNonBatch::new(512, 2);
 
     let mut softmax = Softmax::new(1);
-
     // model
 
     for epoch in 0..20 {
