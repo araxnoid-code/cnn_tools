@@ -131,7 +131,7 @@ impl LinaerNonBatch {
         self.bias = bias;
     }
 
-    pub fn saving_params(self, path: &str) {
+    pub fn saving_params(&self, path: &str) {
         let params = LinaerNonBatchParams {
             weight: self.weight.flatten().to_vec(),
             bias: self.bias.flatten().to_vec(),

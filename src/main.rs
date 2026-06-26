@@ -2,7 +2,7 @@ use std::{fs::read_dir, path::Path, thread::available_parallelism};
 
 use cnn_tools::{
     Conv2DNonBatch, LinaerNonBatch, MaxPooling2DNonBatch, Softmax, cross_entropy_loss,
-    cross_entropy_loss_backward, relu, relu_backward,
+    cross_entropy_loss_backward, draw_plot, relu, relu_backward,
 };
 use image::imageops::FilterType;
 use ndarray::{ArrayBase, ArrayD, Axis, Dim, IxDynImpl, OwnedRepr, array};
@@ -18,50 +18,10 @@ use plotters::{
     },
 };
 
-fn draw_plot(caption: &str, series: Vec<(f32, f32)>, path: &str, size: (u32, u32)) {
-    let x_max = series
-        .iter()
-        .max_by(|x, y| x.0.partial_cmp(&y.0).unwrap())
-        .unwrap();
-    let y_max = series
-        .iter()
-        .max_by(|x, y| x.1.partial_cmp(&y.1).unwrap())
-        .unwrap();
-
-    let root = BitMapBackend::new(path, size).into_drawing_area();
-    root.fill(&WHITE).unwrap();
-    let mut chart = ChartBuilder::on(&root)
-        .caption(caption, ("sans-serif", 25).into_font())
-        .x_label_area_size(30)
-        .y_label_area_size(30)
-        .build_cartesian_2d(0f32..x_max.0, 0f32..y_max.1)
-        .unwrap();
-
-    chart.configure_mesh().draw().unwrap();
-
-    chart
-        .draw_series(PointSeries::of_element(series, 5, &RED, &|c, _, _| {
-            return EmptyElement::at(c) + Circle::new((0, 0), 3, ShapeStyle::from(&BLACK).filled());
-        }))
-        .unwrap();
-
-    root.present().unwrap();
-}
-
 fn main() {
-    let data = vec![
-        (0., 10.),
-        (10., 20.),
-        (8., 7.),
-        (8., 3.),
-        (9., 13.),
-        (1., 6.),
-    ];
-
-    draw_plot("data", data, "testing.png", (750, 750));
-
-    // let dataset = get_dataset();
-    // model(dataset);
+    let dataset = get_dataset();
+    let loss = model(dataset);
+    draw_plot("training", loss, "training.png", (750, 750));
 }
 
 fn get_dataset() -> Vec<(
@@ -133,24 +93,29 @@ fn get_dataset() -> Vec<(
     batch_sample_train
 }
 
-fn model(batch: Vec<(ArrayD<f32>, ArrayD<f32>)>) {
+fn model(batch: Vec<(ArrayD<f32>, ArrayD<f32>)>) -> Vec<(f32, f32)> {
+    let mut loss_save = vec![];
     // model
     let mut conv2d_1 = Conv2DNonBatch::new(3, 8, 3);
     let max_pooling_1 = MaxPooling2DNonBatch::new(2, 2);
 
     let mut conv2d_2 = Conv2DNonBatch::new(8, 16, 3);
+
     let max_pooling_2 = MaxPooling2DNonBatch::new(2, 2);
 
     let mut conv2d_3 = Conv2DNonBatch::new(16, 32, 3);
+
     let max_pooling_3 = MaxPooling2DNonBatch::new(2, 2);
 
     let mut linear_1 = LinaerNonBatch::new(1152, 512);
+
     let mut linear_2 = LinaerNonBatch::new(512, 2);
+
     let mut softmax = Softmax::new(1);
 
     // model
 
-    for epoch in 0..32 {
+    for epoch in 0..20 {
         let mut mean = 0.;
         for (idx, (sample, label)) in batch.iter().enumerate() {
             let conv2d_1_result = conv2d_1.forward(sample.view());
@@ -182,6 +147,7 @@ fn model(batch: Vec<(ArrayD<f32>, ArrayD<f32>)>) {
             let prop = softmax.get_ouput().unwrap();
 
             let loss = cross_entropy_loss(prop.view(), label.view(), 1);
+
             mean += loss[[0, 0]];
 
             // backpropagation
@@ -319,5 +285,17 @@ fn model(batch: Vec<(ArrayD<f32>, ArrayD<f32>)>) {
             linear_2.zero_grad();
         }
         println!("epoch {}, mean loss: {}", epoch, mean / batch.len() as f32);
+
+        let mean_loss = mean / batch.len() as f32;
+        loss_save.push((epoch as f32, mean_loss));
     }
+
+    // saving
+    conv2d_1.saving_params("params/conv2d_1.json").unwrap();
+    conv2d_2.saving_params("params/conv2d_2.json").unwrap();
+    conv2d_3.saving_params("params/conv2d_3.json").unwrap();
+    linear_1.saving_params("params/linear_1.json");
+    linear_2.saving_params("params/linear_2.json");
+    // saving
+    loss_save
 }
