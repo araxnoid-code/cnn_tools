@@ -23,7 +23,7 @@ pub fn model_train(batch: Vec<(ArrayD<f32>, ArrayD<f32>)>) -> Vec<(f32, f32)> {
     // model
 
     for epoch in 0..30 {
-        let mut mean = 0.;
+        let mut acc = 0.;
         for (idx, (sample, label)) in batch.iter().enumerate() {
             let conv2d_1_result = conv2d_1.forward(sample.view());
             let relu_1 = relu(conv2d_1_result.view());
@@ -55,7 +55,7 @@ pub fn model_train(batch: Vec<(ArrayD<f32>, ArrayD<f32>)>) -> Vec<(f32, f32)> {
 
             let loss = cross_entropy_loss(prop.view(), label.view(), 1);
 
-            mean += loss[[0, 0]];
+            acc += loss[[0, 0]];
 
             // backpropagation
             let mut conv2d_1_result_gradient = ArrayD::<f32>::zeros(conv2d_1_result.shape());
@@ -191,9 +191,9 @@ pub fn model_train(batch: Vec<(ArrayD<f32>, ArrayD<f32>)>) -> Vec<(f32, f32)> {
             linear_1.zero_grad();
             linear_2.zero_grad();
         }
-        println!("epoch {}, mean loss: {}", epoch, mean / batch.len() as f32);
+        println!("epoch {}, mean loss: {}", epoch, acc / batch.len() as f32);
 
-        let mean_loss = mean / batch.len() as f32;
+        let mean_loss = acc / batch.len() as f32;
         loss_save.push((epoch as f32, mean_loss));
     }
 
